@@ -157,7 +157,8 @@ const jitterTrace = {
     xaxis: { tickangle: 45 },   // ❌ removed "Cancer Type" label
     yaxis: { title: "VST Expression" },
     margin: { l: 60, r: 40, t: 60, b: 220 },  // ✔ extra bottom margin
-    autosize: true,
+    height: 800,         // 👈 makes the plot taller
+    autosize: false, 
     showlegend: false
   });
 }
