@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gene Expression Viewer</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 40px;
+}
+#search-container {
+  position: relative;
+  width: 300px;
+}
+#geneInput {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-top: none;
+  z-index: 99;
+  top: 40px;
+  left: 0;
+  right: 0;
+  background: white;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+}
+.autocomplete-items div:hover {
+  background-color: #e9e9e9;
+}
+.autocomplete-active {
+  background-color: #1e90ff !important;
+  color: #ffffff;
+}
+button {
+  padding: 10px 18px;
+  font-size: 16px;
+  cursor: pointer;
+}
+#plot {
+  margin-top: 40px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>Gene Expression Explorer</h2>
+
+<div id="search-container">
+    <input type="text" id="geneInput" placeholder="Enter gene name">
+    <div id="autocomplete-list" class="autocomplete-items"></div>
+</div>
+
+<button onclick="plotGene()">Plot</button>
+
+<div id="plot"></div>
+
+<script>
+let geneList = [];
+
+// Load gene names ONCE
+fetch("genes_json/")
+  .then(() => {
+    // Directory listing not allowed; instead fetch a static list file
+    // You will generate a gene_list.json on the server
+    return fetch("gene_list.json");
+  })
+  .then(res => res.json())
+  .then(list => {
+    geneList = list;
+  });
+
+// Autocomplete logic
+document.getElementById("geneInput").addEventListener("input", function() {
+  const val = this.value.toUpperCase();
+  const listDiv = document.getElementById("autocomplete-list");
+  listDiv.innerHTML = "";
+  if (!val) return;
+
+  const matches = geneList.filter(g => g.startsWith(val)).slice(0, 20);
+
+  matches.forEach(g => {
+    const item = document.createElement("div");
+    item.textContent = g;
+    item.onclick = () => {
+      document.getElementById("geneInput").value = g;
+      listDiv.innerHTML = "";
+    };
+    listDiv.appendChild(item);
+  });
+});
+
+// Plot function
+function plotGene() {
+  const gene = document.getElementById("geneInput").value.toUpperCase();
+  const url = "genes_json/" + gene + ".json";
+
+  fetch(url)
+    .then(response => {
+      if (!response.ok) throw new Error("Not found");
+      return response.json();
+    })
+    .then(subset => drawPlot(subset, gene))
+    .catch(() => alert("Gene not found: " + gene));
+}
+
+function drawPlot(subset, gene) {
+  const groups = {};
+  subset.forEach(row => {
+    if (!groups[row.Type]) groups[row.Type] = [];
+    groups[row.Type].push(row.Expression);
+  });
+
+  const median = arr => arr.slice().sort((a,b)=>a-b)[Math.floor(arr.length/2)];
+
+  const ordered = Object.keys(groups)
+    .map(t => ({ type: t, med: median(groups[t]) }))
+    .sort((a,b) => b.med - a.med)
+    .map(o => o.type);
+
+  const boxTraces = ordered.map(type => ({
+    y: groups[type],
+    x: Array(groups[type].length).fill(type),
+    type: "box",
+    name: type,
+    boxpoints: false,
+    opacity: 0.5
+  }));
+
+  const jitterTrace = {
+    x: subset.map(r => r.Type),
+    y: subset.map(r => r.Expression),
+    mode: "markers",
+    type: "scatter",
+    marker: { size: 6, opacity: 0.6 },
+    name: "samples"
+  };
+
+  Plotly.newPlot("plot", [...boxTraces, jitterTrace], {
+    title: gene + " Expression Across Cancer Types",
+    xaxis: { tickangle: 45, title: "Cancer Type" },
+    yaxis: { title: "VST Expression" },
+    showlegend: false
+  });
+}
+</script>
+
+</body>
+</html>
