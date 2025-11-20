@@ -151,12 +151,10 @@ function drawPlot(subset, gene) {
 
   Plotly.newPlot("plot", [...boxTraces, jitterTrace], {
     title: gene + " Expression Across Cancer Types",
-    xaxis: { tickangle: 45, title: "Cancer Type" },
+    xaxis: { tickangle: 45 },   // <- Removed title label here
     yaxis: { title: "VST Expression" },
+    margin: { l: 60, r: 40, t: 60, b: 200 },  // <- More bottom margin
+    autosize: true,  // <- Prevents clipping
     showlegend: false
   });
 }
-</script>
-
-</body>
-</html>
