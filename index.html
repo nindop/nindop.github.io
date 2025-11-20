@@ -135,7 +135,10 @@ function drawPlot(subset, gene) {
     type: "box",
     name: type,
     boxpoints: false,
-    opacity: 0.5
+    marker: { color: (type === "Chordoma") ? "red" : "black" },
+    line:   { color: (type === "Chordoma") ? "red" : "black" },
+    fillcolor: (type === "Chordoma") ? "rgba(255,0,0,0.3)" : "rgba(0,0,0,0.2)",
+    opacity: 0.8
   }));
 
 const jitterTrace = {
