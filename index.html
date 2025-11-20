@@ -47,9 +47,10 @@ button {
   padding: 10px 18px;
   font-size: 16px;
   cursor: pointer;
+  margin-top: 10px;
 }
 #plot {
-  margin-top: 40px;
+  margin-top: 50px;
 }
 </style>
 
@@ -71,16 +72,11 @@ button {
 <script>
 let geneList = [];
 
-// Load gene names ONCE
-fetch("genes_json/")
-  .then(() => {
-    // Directory listing not allowed; instead fetch a static list file
-    // You will generate a gene_list.json on the server
-    return fetch("gene_list.json");
-  })
+// Load gene list for autocomplete
+fetch("gene_list.json")
   .then(res => res.json())
   .then(list => {
-    geneList = list;
+    geneList = list.map(g => g.toUpperCase());
   });
 
 // Autocomplete logic
@@ -106,6 +102,8 @@ document.getElementById("geneInput").addEventListener("input", function() {
 // Plot function
 function plotGene() {
   const gene = document.getElementById("geneInput").value.toUpperCase();
+  if (!gene) return;
+
   const url = "genes_json/" + gene + ".json";
 
   fetch(url)
@@ -146,13 +144,15 @@ function drawPlot(subset, gene) {
     mode: "markers",
     type: "scatter",
     marker: { size: 6, opacity: 0.6 },
-    name: "samples"
+    name: "points"
   };
 
   Plotly.newPlot("plot", [...boxTraces, jitterTrace], {
     title: gene + " Expression Across Cancer Types",
-    xaxis: { tickangle: 45, title: "Cancer Type" },
+    xaxis: { tickangle: 45 },   // ❌ removed "Cancer Type" label
     yaxis: { title: "VST Expression" },
+    margin: { l: 60, r: 40, t: 60, b: 220 },  // ✔ extra bottom margin
+    autosize: true,
     showlegend: false
   });
 }
