@@ -138,14 +138,19 @@ function drawPlot(subset, gene) {
     opacity: 0.5
   }));
 
-  const jitterTrace = {
-    x: subset.map(r => r.Type),
-    y: subset.map(r => r.Expression),
-    mode: "markers",
-    type: "scatter",
-    marker: { size: 6, opacity: 0.6 },
-    name: "points"
-  };
+const jitterTrace = {
+  x: subset.map(r => r.Type),
+  y: subset.map(r => r.Expression),
+  mode: "markers",
+  type: "scatter",
+  marker: { size: 6, opacity: 0.6 },
+  text: subset.map(r => r.CellLineName),   // 👈 Add this
+  hovertemplate: 
+      "<b>%{text}</b><br>" +
+      "Expression: %{y:.2f}<br>" +
+      "Type: %{x}<extra></extra>",        // 👈 Clean tooltip
+  name: "points"
+};
 
   Plotly.newPlot("plot", [...boxTraces, jitterTrace], {
     title: gene + " Expression Across Cancer Types",
